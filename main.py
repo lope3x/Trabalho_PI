@@ -56,11 +56,11 @@ class MainWindow:
         self.window.mainloop()
 
     def zoom_in(self):
-        self.scale = self.scale * 1.5
+        self.scale = self.scale * 1.2
         self.re_draw()
 
     def zoom_out(self):
-        self.scale = self.scale / 1.5
+        self.scale = self.scale / 1.2
         self.re_draw()
 
     def reset_zoom(self):
@@ -92,7 +92,7 @@ class MainWindow:
         self.image_original = Image.open(self.filepath)
         self.photo_image = ImageTk.PhotoImage(self.image_original)
         self.canvas.create_image(0, 0, image=self.photo_image, anchor='center')
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        # self.canvas.configure(scrollregion=self.canvas.bbox("all")) #TODO infito
 
 
 def main():
