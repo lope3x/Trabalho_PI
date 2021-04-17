@@ -33,7 +33,7 @@ class SubWindow:
         self.photo_image = ImageTk.PhotoImage(self.image)
         self.image_canvas =  self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         self.canvas.pack()
-
+        self.cropped_image_window.mainloop()
 
 class MainWindow:
     def __init__(self):
@@ -143,11 +143,11 @@ class MainWindow:
 
     def draw_selection_rectangle(self, event):
         x_center, y_center = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        x1, y1 = x_center - 63, y_center - 63
+        x1, y1 = x_center - 64, y_center - 64
         x3, y3 = x_center + 64, y_center + 64
         self.selection_rect = self.canvas.create_rectangle(x1, y1, x3, y3, dash=(4, 1), outline="blue")
 
-        return event.x -63, event.y -63,event.x +64, event.y + 64
+        return event.x -64, event.y -64,event.x +64, event.y + 64
 
     def on_drag(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
