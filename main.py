@@ -37,7 +37,7 @@ class SubWindow:
         self.quantize_submenu.add_command(label='4', command=lambda: self.change_quantize(4))
         self.quantize_submenu.add_command(label='2', command=lambda: self.change_quantize(2))
 
-        self.cropped_image_menu.add_command(label='Equalizar', command= self.equalize_image)
+        self.cropped_image_menu.add_command(label='Equalizar', command=self.equalize_image)
 
         self.cropped_image_menu.add_command(label='Reset', command=self.reset)
         self.canvas = tk.Canvas(self.cropped_image_window, width=128, height=128)
@@ -77,8 +77,6 @@ class SubWindow:
         self.re_draw()
 
 
-
-
 class MainWindow:
     def __init__(self):
         # Screen
@@ -102,19 +100,6 @@ class MainWindow:
         self.menu.add_command(label='Zoom Out', command=self.zoom_out)
         self.menu.add_command(label='Reset Zoom', command=self.reset_zoom)
         self.menu.add_command(label="Selecionar Área", command=self.selection_area)
-
-        self.menu.add_cascade(label='Transformações', menu=submenu)
-        submenu.add_command(label='Translação', )
-        submenu.add_command(label='Rotação', )
-        submenu.add_command(label='Escala', )
-        submenu.add_command(label='Reflexão X')
-        submenu.add_command(label='Reflexão Y', )
-        submenu.add_command(label='Reflexão XY', )
-
-        lines_menu = Menu(self.window, tearoff=0)
-        self.menu.add_cascade(label='Retas', menu=lines_menu)
-        lines_menu.add_command(label='DDA', )
-        lines_menu.add_command(label='Bresenham', )
 
         self.canvas = tk.Canvas(self.window, width=800, height=800, bg='black')
         self.canvas.pack()
