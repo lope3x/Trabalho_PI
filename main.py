@@ -4,11 +4,13 @@ from tkinter.filedialog import askopenfilename
 
 from PIL import Image, ImageTk
 
+
 class SubWindow:
     def __init__(self, image, root):
         self.cropped_image_window = tk.Toplevel(root)
-        self.cropped_image_window.geometry("300x300")
-        self.image = image
+        self.cropped_image_window.geometry("300x150")
+        self.image_original = image
+        self.image_on_screen = self.image_original
 
         self.cropped_image_menu = Menu(self.cropped_image_window)
         self.cropped_image_window.config(menu=self.cropped_image_menu)
@@ -20,20 +22,32 @@ class SubWindow:
 
         self.quantize_submenu = Menu(self.cropped_image_menu, tearoff=0)
         self.cropped_image_menu.add_cascade(label='Quantização', menu=self.quantize_submenu)
-        self.quantize_submenu.add_command(label='256', )
-        self.quantize_submenu.add_command(label='32', )
-        self.quantize_submenu.add_command(label='16', )
+        self.quantize_submenu.add_command(label='256', command = lambda: self.change_quantize(256))
+        self.quantize_submenu.add_command(label='32', command = lambda: self.change_quantize(32))
+        self.quantize_submenu.add_command(label='16', command = lambda: self.change_quantize(16))
 
         self.cropped_image_menu.add_command(label='Equalizar', )
 
         self.cropped_image_menu.add_command(label='Reset', )
+        self.canvas = tk.Canvas(self.cropped_image_window, width=128, height=128)
 
-        self.canvas = tk.Canvas(self.cropped_image_window, width=128, height=128, bg='black')
-
-        self.photo_image = ImageTk.PhotoImage(self.image)
-        self.image_canvas =  self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
+        self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
+        self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         self.canvas.pack()
         self.cropped_image_window.mainloop()
+
+    def change_quantize(self, const):
+        print(self.image_on_screen)
+        self.image_on_screen = self.image_original.quantize(2)
+        print(self.image_on_screen)
+        self.re_draw()
+        self.image_on_screen.show()
+
+    def re_draw(self):
+        self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
+        self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
+
+
 
 class MainWindow:
     def __init__(self):
@@ -121,7 +135,7 @@ class MainWindow:
             return
 
         self.photo_image = ImageTk.PhotoImage(self.image_original.resize((new_width, new_height)))
-        self.canvas.create_image(0, 0, image=self.photo_image, anchor='center')
+        self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
 
     def open_cropped_image_window(self, image):
         SubWindow(image, self.window)
@@ -139,15 +153,13 @@ class MainWindow:
 
             self.open_cropped_image_window(cropped_image)
 
-
-
     def draw_selection_rectangle(self, event):
         x_center, y_center = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        x1, y1 = x_center - 64, y_center - 64
-        x3, y3 = x_center + 64, y_center + 64
+        x1, y1 = x_center - 64 * self.scale, y_center - 64 * self.scale
+        x3, y3 = x_center + 64 * self.scale, y_center + 64 * self.scale
         self.selection_rect = self.canvas.create_rectangle(x1, y1, x3, y3, dash=(4, 1), outline="blue")
 
-        return event.x -64, event.y -64,event.x +64, event.y + 64
+        return event.x - 64 , event.y - 64, event.x + 64, event.y + 64
 
     def on_drag(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
@@ -161,11 +173,11 @@ class MainWindow:
         self.image_original = Image.open(self.filepath)
         print(self.image_original)
         self.photo_image = ImageTk.PhotoImage(self.image_original)
-        self.image_canvas =  self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
+        self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         width, height = self.image_original.size  # Get dimensions
         self.window.geometry(f"{width}x{height}")
         self.canvas.config(width=width, height=height)
-        self.canvas.configure(scrollregion=self.canvas.bbox("all")) #TODO infito
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))  # TODO infito
 
 
 def main():
