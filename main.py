@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import Menu
 from tkinter.filedialog import askopenfilename
 
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
 
 
 class SubWindow:
@@ -11,24 +11,35 @@ class SubWindow:
         self.cropped_image_window.geometry("300x150")
         self.image_original = image
         self.image_on_screen = self.image_original
+        self.num_of_colors = 256
+        self.resolution = 128
+        self.should_equalize_image = False
 
         self.cropped_image_menu = Menu(self.cropped_image_window)
         self.cropped_image_window.config(menu=self.cropped_image_menu)
 
         self.resolution_submenu = Menu(self.cropped_image_menu, tearoff=0)
         self.cropped_image_menu.add_cascade(label='Resolução', menu=self.resolution_submenu)
-        self.resolution_submenu.add_command(label='64 x 64', )
-        self.resolution_submenu.add_command(label='32 x 32', )
+        self.resolution_submenu.add_command(label='128 x 128', command=lambda: self.change_resolution(128))
+        self.resolution_submenu.add_command(label='64 x 64', command=lambda: self.change_resolution(64))
+        self.resolution_submenu.add_command(label='32 x 32', command=lambda: self.change_resolution(32))
+        self.resolution_submenu.add_command(label='16 x 16', command=lambda: self.change_resolution(16))
+        self.resolution_submenu.add_command(label='8 x 8', command=lambda: self.change_resolution(8))
+        self.resolution_submenu.add_command(label='4 x 4', command=lambda: self.change_resolution(4))
+        self.resolution_submenu.add_command(label='2 x 2', command=lambda: self.change_resolution(2))
 
         self.quantize_submenu = Menu(self.cropped_image_menu, tearoff=0)
         self.cropped_image_menu.add_cascade(label='Quantização', menu=self.quantize_submenu)
-        self.quantize_submenu.add_command(label='256', command = lambda: self.change_quantize(256))
-        self.quantize_submenu.add_command(label='32', command = lambda: self.change_quantize(32))
-        self.quantize_submenu.add_command(label='16', command = lambda: self.change_quantize(16))
+        self.quantize_submenu.add_command(label='256', command=lambda: self.change_quantize(256))
+        self.quantize_submenu.add_command(label='32', command=lambda: self.change_quantize(32))
+        self.quantize_submenu.add_command(label='16', command=lambda: self.change_quantize(16))
+        self.quantize_submenu.add_command(label='8', command=lambda: self.change_quantize(8))
+        self.quantize_submenu.add_command(label='4', command=lambda: self.change_quantize(4))
+        self.quantize_submenu.add_command(label='2', command=lambda: self.change_quantize(2))
 
-        self.cropped_image_menu.add_command(label='Equalizar', )
+        self.cropped_image_menu.add_command(label='Equalizar', command= self.equalize_image)
 
-        self.cropped_image_menu.add_command(label='Reset', )
+        self.cropped_image_menu.add_command(label='Reset', command=self.reset)
         self.canvas = tk.Canvas(self.cropped_image_window, width=128, height=128)
 
         self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
@@ -36,16 +47,35 @@ class SubWindow:
         self.canvas.pack()
         self.cropped_image_window.mainloop()
 
-    def change_quantize(self, const):
-        print(self.image_on_screen)
-        self.image_on_screen = self.image_original.quantize(2)
-        print(self.image_on_screen)
+    def change_quantize(self, colors):
+        self.num_of_colors = colors
         self.re_draw()
-        self.image_on_screen.show()
+
+    def change_resolution(self, resolution):
+        self.resolution = resolution
+        self.re_draw()
+
+    def equalize_image(self):
+        self.should_equalize_image = True
+        self.re_draw()
 
     def re_draw(self):
+        self.image_on_screen = self.image_original.quantize(colors=self.num_of_colors)
+        self.image_on_screen = self.image_on_screen.resize((self.resolution, self.resolution))
+        self.image_on_screen = self.image_on_screen.resize((128, 128))
+
+        if self.should_equalize_image:
+            self.image_on_screen = ImageOps.equalize(self.image_on_screen)
+
         self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
+
+    def reset(self):
+        self.num_of_colors = 256
+        self.resolution = 128
+        self.should_equalize_image = False
+        self.re_draw()
+
 
 
 
@@ -62,15 +92,6 @@ class MainWindow:
         self.scale = 1
         self.selection_enabled = False
         self.selection_rect = None
-
-        # image_original = Image.open("image.png")
-        # test = ImageTk.PhotoImage(image_low)
-        #
-        # label1 = tk.Label(image=test)
-        # label1.image = test
-        #
-        # # Position image
-        # label1.place(x=0, y=0)
 
         self.menu = Menu(self.window)
         self.window.config(menu=self.menu)
@@ -133,8 +154,8 @@ class MainWindow:
         new_height = int(height * self.scale)
         if new_width > 5000 or new_height > 5000 or new_width <= 0 or new_height <= 0:
             return
-
-        self.photo_image = ImageTk.PhotoImage(self.image_original.resize((new_width, new_height)))
+        self.image_on_screen = self.image_original.resize((new_width, new_height))
+        self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
 
     def open_cropped_image_window(self, image):
@@ -149,17 +170,17 @@ class MainWindow:
 
             x1, y1, x3, y3 = self.draw_selection_rectangle(event)
 
-            cropped_image = self.image_original.crop((x1, y1, x3, y3))
+            cropped_image = self.image_on_screen.crop((x1, y1, x3, y3))
 
             self.open_cropped_image_window(cropped_image)
 
     def draw_selection_rectangle(self, event):
         x_center, y_center = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        x1, y1 = x_center - 64 * self.scale, y_center - 64 * self.scale
-        x3, y3 = x_center + 64 * self.scale, y_center + 64 * self.scale
+        x1, y1 = x_center - 64, y_center - 64
+        x3, y3 = x_center + 64, y_center + 64
         self.selection_rect = self.canvas.create_rectangle(x1, y1, x3, y3, dash=(4, 1), outline="blue")
 
-        return event.x - 64 , event.y - 64, event.x + 64, event.y + 64
+        return event.x - 64, event.y - 64, event.x + 64, event.y + 64
 
     def on_drag(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
@@ -170,11 +191,11 @@ class MainWindow:
         )
         if self.filepath == '':
             return
-        self.image_original = Image.open(self.filepath)
-        print(self.image_original)
-        self.photo_image = ImageTk.PhotoImage(self.image_original)
+        self.image_original = (Image.open(self.filepath)).convert("L")
+        self.image_on_screen = self.image_original
+        self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
-        width, height = self.image_original.size  # Get dimensions
+        width, height = self.image_on_screen.size  # Get dimensions
         self.window.geometry(f"{width}x{height}")
         self.canvas.config(width=width, height=height)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))  # TODO infito
