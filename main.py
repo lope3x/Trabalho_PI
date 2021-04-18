@@ -13,18 +13,19 @@ max_image_size = 5000
 selection_rect_offset = 64
 
 
-class SubWindow:
+class SubWindow(tk.Toplevel):
     def __init__(self, image, root):
-        self.cropped_image_window = tk.Toplevel(root)
-        self.cropped_image_window.geometry("300x150")
+        super().__init__(root)
+        # self.cropped_image_window = tk.Toplevel(root)
+        self.geometry("300x150")
         self.image_original = image
         self.image_on_screen = self.image_original
         self.num_of_colors = 256
         self.resolution = 128
         self.should_equalize_image = False
 
-        self.cropped_image_menu = Menu(self.cropped_image_window)
-        self.cropped_image_window.config(menu=self.cropped_image_menu)
+        self.cropped_image_menu = Menu(self)
+        self.config(menu=self.cropped_image_menu)
 
         self.resolution_submenu = Menu(self.cropped_image_menu, tearoff=0)
         self.cropped_image_menu.add_cascade(label='Resolução', menu=self.resolution_submenu)
@@ -48,12 +49,15 @@ class SubWindow:
         self.cropped_image_menu.add_command(label='Equalizar', command=self.equalize_image)
 
         self.cropped_image_menu.add_command(label='Reset', command=self.reset)
-        self.canvas = tk.Canvas(self.cropped_image_window, width=128, height=128)
+
+        width, height = self.image_original.size
+
+        self.canvas = tk.Canvas(self, width=width, height=height)
 
         self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         self.canvas.pack()
-        self.cropped_image_window.mainloop()
+        # self.cropped_image_window.mainloop()
 
     def change_quantize(self, colors):
         self.num_of_colors = colors
@@ -64,7 +68,7 @@ class SubWindow:
         self.re_draw()
 
     def equalize_image(self):
-        self.should_equalize_image = True
+        self.should_equalize_image = not self.should_equalize_image
         self.re_draw()
 
     def re_draw(self):
@@ -84,6 +88,10 @@ class SubWindow:
         self.should_equalize_image = False
         self.re_draw()
 
+    def set_image(self, image):
+        self.image_original = image
+        self.re_draw()
+
 
 class MainWindow:
     def __init__(self):
@@ -98,6 +106,8 @@ class MainWindow:
         self.scale = 1
         self.selection_enabled = False
         self.selection_rect = None
+        self.exist_sub_window = None
+        self.image_canvas = None
 
         self.menu = Menu(self.window)
         self.window.config(menu=self.menu)
@@ -109,7 +119,7 @@ class MainWindow:
         self.menu.add_command(label="Selecionar Área", command=self.selection_area)
         self.image_on_screen = None
 
-        self.canvas = tk.Canvas(self.window, width=800, height=800, bg='black')
+        self.canvas = tk.Canvas(self.window, width=800, height=800)
         self.canvas.pack()
 
         # self.canvas.bind('<B1-Motion>', self.on_drag)
@@ -127,24 +137,23 @@ class MainWindow:
             self.zoom_out()
 
     def zoom_in(self):
-        if not self.selection_enabled:
-            self.scale = self.scale * scale_constant
-            self.re_draw()
+        self.scale = self.scale * scale_constant
+        self.re_draw()
 
     def zoom_out(self):
-        if not self.selection_enabled:
-            self.scale = self.scale / scale_constant
-            self.re_draw()
+        self.scale = self.scale / scale_constant
+        self.re_draw()
 
     def reset_zoom(self):
-        if not self.selection_enabled:
-            self.scale = 1
-            self.re_draw()
+        self.scale = 1
+        self.re_draw()
 
     def re_draw(self):
         new_height, new_width = self.get_new_image_size()
         if new_width > max_image_size or new_height > max_image_size or new_width <= min_image_size or new_height <= min_image_size:
             return
+        if self.selection_rect is not None:
+            self.canvas.delete(self.selection_rect)
         self.image_on_screen = self.image_original.resize((new_width, new_height))
         self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
@@ -156,7 +165,10 @@ class MainWindow:
         return new_height, new_width
 
     def open_cropped_image_window(self, image):
-        SubWindow(image, self.window)
+        if self.exist_sub_window is None:
+            self.exist_sub_window = SubWindow(image, self.window)
+        else:
+            self.exist_sub_window.set_image(image)
 
     def on_click(self, event):
         self.canvas.scan_mark(event.x, event.y)

@@ -7,4 +7,4 @@ por pixel); </s>
 - <s> Selecionar com o mouse uma região de interesse de 128 x 128 pixels a serreconhecida. Mostrar o contorno da região na cor azul; </s>
 - <s> Oferecer uma opção para diminuir a resolução da região para 64 x 64 ou 32 x 32 pixels exibindo o resultado; </s>
 - <s> Oferecer uma opção para diminuir a quantização da região para 256, 32 ou 16 tons de cinza, exibindo o resultado; </s>
-- Oferecer opção para equalizar a região selecionada
+- <s>  Oferecer opção para equalizar a região selecionada </s>
