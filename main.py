@@ -16,7 +16,6 @@ selection_rect_offset = 64
 class SubWindow(tk.Toplevel):
     def __init__(self, image, root):
         super().__init__(root)
-        # self.cropped_image_window = tk.Toplevel(root)
         self.geometry("300x150")
         self.image_original = image
         self.image_on_screen = self.image_original
@@ -57,7 +56,6 @@ class SubWindow(tk.Toplevel):
         self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         self.canvas.pack()
-        # self.cropped_image_window.mainloop()
 
     def change_quantize(self, colors):
         self.num_of_colors = colors
@@ -165,7 +163,7 @@ class MainWindow:
         return new_height, new_width
 
     def open_cropped_image_window(self, image):
-        if self.exist_sub_window is None:
+        if self.exist_sub_window is None or not self.exist_sub_window.winfo_exists():
             self.exist_sub_window = SubWindow(image, self.window)
         else:
             self.exist_sub_window.set_image(image)
