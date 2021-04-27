@@ -163,10 +163,13 @@ class MainWindow:
         return new_height, new_width
 
     def open_cropped_image_window(self, image):
-        if self.exist_sub_window is None or not self.exist_sub_window.winfo_exists():
+        if self.should_create_sub_window():
             self.exist_sub_window = SubWindow(image, self.window)
         else:
             self.exist_sub_window.set_image(image)
+
+    def should_create_sub_window(self):
+        return self.exist_sub_window is None or not self.exist_sub_window.winfo_exists()
 
     def on_click(self, event):
         self.canvas.scan_mark(event.x, event.y)
