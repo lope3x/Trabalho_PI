@@ -67,7 +67,7 @@ class SubWindow(tk.Toplevel):
         image16Colors = imageGray.quantize(colors=16)
         image32Colors = imageGray.quantize(colors=32)
         allDescriptors = compute_all_descriptors(image32Colors) + compute_all_descriptors(image16Colors)
-        print(len(allDescriptors))
+
     def change_quantize(self, colors):
         self.num_of_colors = colors
         self.re_draw()

@@ -55,3 +55,18 @@ def compute_all_descriptors(image):
 
     descriptors = descriptors32 + descriptors64 + descriptors128
     return descriptors
+
+
+def readImages():
+    basePath = "/teste/"
+    types = [1, 2, 3, 4]
+
+
+    images1 = []
+    images2 = []
+    images3 = []
+    images4 = []
+
+    #
+    #
+    # (Image.open(self.filepath)).convert("L")
