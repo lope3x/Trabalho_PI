@@ -4,6 +4,8 @@ from tkinter.filedialog import askopenfilename
 
 from PIL import Image, ImageTk, ImageOps
 
+from algorithm import compute_descriptors, compute_all_descriptors
+
 scale_constant = 1.2
 
 min_image_size = 0
@@ -16,7 +18,7 @@ selection_rect_offset = 64
 class SubWindow(tk.Toplevel):
     def __init__(self, image, root):
         super().__init__(root)
-        self.geometry("300x150")
+        self.geometry("300x200")
         self.image_original = image
         self.image_on_screen = self.image_original
         self.num_of_colors = 256
@@ -49,6 +51,8 @@ class SubWindow(tk.Toplevel):
 
         self.cropped_image_menu.add_command(label='Reset', command=self.reset)
 
+        self.cropped_image_menu.add_command(label='Classificador', command=self.classify_image)
+
         width, height = self.image_original.size
 
         self.canvas = tk.Canvas(self, width=width, height=height)
@@ -57,6 +61,13 @@ class SubWindow(tk.Toplevel):
         self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         self.canvas.pack()
 
+    def classify_image(self):
+        imageEqualized = ImageOps.equalize(self.image_original)
+        imageGray = imageEqualized.convert("L")
+        image16Colors = imageGray.quantize(colors=16)
+        image32Colors = imageGray.quantize(colors=32)
+        allDescriptors = compute_all_descriptors(image32Colors) + compute_all_descriptors(image16Colors)
+        print(len(allDescriptors))
     def change_quantize(self, colors):
         self.num_of_colors = colors
         self.re_draw()
