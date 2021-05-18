@@ -1,4 +1,8 @@
+import os
+
 import numpy as np
+from PIL import ImageOps
+from PIL.Image import Image
 from skimage.feature import greycomatrix, greycoprops
 from skimage.measure import shannon_entropy
 from math import pi
@@ -57,16 +61,39 @@ def compute_all_descriptors(image):
     return descriptors
 
 
+def loadAndComputeDescriptorsAtPath(path):
+    image = Image.open(path)
+    imageEqualized = ImageOps.equalize(image)
+    imageGray = imageEqualized.convert("L")
+    image16Colors = imageGray.quantize(colors=16)
+    image32Colors = imageGray.quantize(colors=32)
+    allDescriptors = compute_all_descriptors(image32Colors) + compute_all_descriptors(image16Colors)
+    return allDescriptors
+
 def readImages():
-    basePath = "/teste/"
-    types = [1, 2, 3, 4]
+    basePath = "/imgs/"
+    types = [
+        1,
+        2,
+        3,
+        4
+    ]
 
+    imagesDescriptors = [
+        [None],
+        [None],
+        [None],
+        [None]
+    ]
+    for i in range(1, 5):
+        j = 0
+        for entry in os.scandir(basePath+str(i)):
+            if entry.path.endswith(".png") and entry.is_file():
+                imagesDescriptors[i][j] = loadAndComputeDescriptorsAtPath(entry.path)
 
-    images1 = []
-    images2 = []
-    images3 = []
-    images4 = []
-
+    for i in range(1, 5):
+        print(i)
+        print(imagesDescriptors[i])
     #
     #
     # (Image.open(self.filepath)).convert("L")
