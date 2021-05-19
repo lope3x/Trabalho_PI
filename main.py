@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import Menu
 from tkinter.filedialog import askopenfilename
 
+import numpy
 from PIL import Image, ImageTk, ImageOps
 
-from algorithm import compute_descriptors, compute_all_descriptors
+from algorithm import compute_descriptors, compute_all_descriptors, readImages, loadAndComputeDescriptorsAtPath
 
 scale_constant = 1.2
 
@@ -16,7 +17,7 @@ selection_rect_offset = 64
 
 
 class SubWindow(tk.Toplevel):
-    def __init__(self, image, root):
+    def __init__(self, image, root, clf):
         super().__init__(root)
         self.geometry("300x200")
         self.image_original = image
@@ -24,6 +25,7 @@ class SubWindow(tk.Toplevel):
         self.num_of_colors = 256
         self.resolution = 128
         self.should_equalize_image = False
+        self.clf = clf
 
         self.cropped_image_menu = Menu(self)
         self.config(menu=self.cropped_image_menu)
@@ -62,11 +64,9 @@ class SubWindow(tk.Toplevel):
         self.canvas.pack()
 
     def classify_image(self):
-        imageEqualized = ImageOps.equalize(self.image_original)
-        imageGray = imageEqualized.convert("L")
-        image16Colors = imageGray.quantize(colors=16)
-        image32Colors = imageGray.quantize(colors=32)
-        allDescriptors = compute_all_descriptors(image32Colors) + compute_all_descriptors(image16Colors)
+        descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
+        descriptors = numpy.reshape(descriptors, (1, -1))
+        print(self.clf.predict(descriptors))
 
     def change_quantize(self, colors):
         self.num_of_colors = colors
@@ -126,6 +126,7 @@ class MainWindow:
         self.menu.add_command(label='Zoom Out', command=self.zoom_out)
         self.menu.add_command(label='Reset Zoom', command=self.reset_zoom)
         self.menu.add_command(label="Selecionar Área", command=self.selection_area)
+        self.menu.add_command(label="Treinar", command=self.train)
         self.image_on_screen = None
 
         self.canvas = tk.Canvas(self.window, width=800, height=800)
@@ -135,6 +136,9 @@ class MainWindow:
         self.canvas.bind('<Button-1>', self.on_click)
         self.canvas.bind("<MouseWheel>", self.on_mousewheel)
         self.window.mainloop()
+
+    def train(self):
+        self.clf = readImages()
 
     def selection_area(self):
         self.selection_enabled = not self.selection_enabled
@@ -175,7 +179,7 @@ class MainWindow:
 
     def open_cropped_image_window(self, image):
         if self.should_create_sub_window():
-            self.exist_sub_window = SubWindow(image, self.window)
+            self.exist_sub_window = SubWindow(image, self.window, self.clf)
         else:
             self.exist_sub_window.set_image(image)
 
