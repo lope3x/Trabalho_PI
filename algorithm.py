@@ -11,7 +11,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 
 from joblib import dump, load
-
+from _thread import *
 
 def loadSVM():
     return load('svm.joblib')
@@ -68,7 +68,7 @@ def loadAndComputeDescriptorsAtPath(path=None, image=None):
     return allDescriptors
 
 
-def readImagesAndComputeDescriptors():
+def readImagesAndComputeDescriptors(trainWindow):
     basePath = "imgs/"
     types = []
     imagesDescriptors = []
@@ -79,13 +79,15 @@ def readImagesAndComputeDescriptors():
                 imagesDescriptors.append(loadAndComputeDescriptorsAtPath(entry.path))
                 types.append(i)
                 num_of_images_processed += 1
+                trainWindow.progress['value'] = int((num_of_images_processed/400)*100)
+                trainWindow.update_idletasks()
                 print(f"Gerando descritores {num_of_images_processed}/400")
     return imagesDescriptors, types
 
 
 def trainSVM(trainWindow):
-    imagesDescriptors, types = readImagesAndComputeDescriptors()
-
+    imagesDescriptors, types = readImagesAndComputeDescriptors(trainWindow)
+    trainWindow.progress.destroy()
     X_train, X_test, y_train, y_test = train_test_split(imagesDescriptors,
                                                         types,
                                                         test_size=.25)
@@ -93,19 +95,25 @@ def trainSVM(trainWindow):
     clf = svm.SVC(kernel='linear', probability=True, random_state=42)
     print("Iniciando treinamento do SVM")
     clf.fit(X_train, y_train)
-
+    trainWindow.labelVar.set("Iniciando treinamento do SVM...")
+    infoString = ""
     y_predicted = clf.predict(X_test)
     print(f"Predicted Values {y_predicted}")
     print(f"Expected Values {y_test}")
+
     accuracy = accuracy_score(y_test, y_predicted)
 
     confusionMatrix = confusion_matrix(y_test, y_predicted)
 
     print(confusionMatrix)
-
-    computeMetrics(confusionMatrix)
+    infoString += str(confusionMatrix)
+    (mean_sensibility, specificity) = computeMetrics(confusionMatrix)
 
     print(f"Accuracy {accuracy}")
+    infoString += f"\nAccuracy {accuracy}"
+    infoString += f"\nSensiblidade Média: {mean_sensibility}"
+    infoString += f"\nEspecificidade: {specificity}"
+    trainWindow.labelVar.set(infoString)
     return clf
 
 
@@ -121,6 +129,6 @@ def computeMetrics(confusionMatrix):
             if i != j:
                 sum += confusionMatrix[i][j] / 300
     specificity = 1 - sum
-
     print(f"Sensiblidade Média: {mean_sensibility}")
     print(f"Especificidade: {specificity}")
+    return (mean_sensibility, specificity)

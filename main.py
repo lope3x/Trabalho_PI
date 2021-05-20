@@ -1,13 +1,14 @@
 import tkinter as tk
-from tkinter import Menu, Frame, Label
+from tkinter import Menu, Frame, Label, HORIZONTAL, TOP, X, YES
 from tkinter.filedialog import askopenfilename
+from tkinter.ttk import Progressbar
 
 import numpy
 from PIL import Image, ImageTk, ImageOps
-
+import threading
 from algorithm import compute_descriptors, compute_for_all_images_sizes, trainSVM, loadAndComputeDescriptorsAtPath, \
     saveSVM, loadSVM
-
+from _thread import *
 scale_constant = 1.2
 
 min_image_size = 0
@@ -25,8 +26,13 @@ class TrainWindow(tk.Toplevel):
         super().__init__(root)
         self.geometry("300x200")
         self.mainframe = Frame(self)
-        self.label = Label(self.mainframe, text="Teste")
+        self.labelVar = tk.StringVar()
+        self.label = Label(self.mainframe, textvariable=self.labelVar)
+        self.label.pack(side=TOP, fill=X, expand=YES)
+        self.progress = Progressbar(self.mainframe, orient = HORIZONTAL, length = 100, mode = 'determinate')
+        self.progress.pack(side=TOP, fill=X, expand=YES)
         self.mainframe.pack()
+
 
 
 
@@ -138,7 +144,8 @@ class MainWindow:
 
         self.menu = Menu(self.window)
         self.window.config(menu=self.menu)
-
+        self.print_lock = threading.Lock()
+        self.print_lock.acquire()
         self.menu.add_command(label='Abrir Imagem', command=self.open_image)
         self.menu.add_command(label='Zoom In', command=self.zoom_in)
         self.menu.add_command(label='Zoom Out', command=self.zoom_out)
@@ -175,9 +182,12 @@ class MainWindow:
     def load_train(self):
         self.clf = loadSVM()
 
+    def get_clf(self, train_window):
+        self.clf = trainSVM(train_window)
+
     def train(self):
         train_window = TrainWindow(self.window)
-        self.clf = trainSVM(train_window)
+        start_new_thread(self.get_clf, (train_window,))
 
     def selection_area(self):
         self.selection_enabled = not self.selection_enabled
