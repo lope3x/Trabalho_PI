@@ -45,7 +45,7 @@ def compute_descriptors(image):
 
 
 def compute_for_all_images_sizes(image):
-    image128 = image
+    image128 = image.resize((128, 128))
     image64 = image.resize((64, 64))
     image32 = image.resize((32, 32))
 
@@ -83,7 +83,7 @@ def readImagesAndComputeDescriptors():
     return imagesDescriptors, types
 
 
-def trainSVM():
+def trainSVM(trainWindow):
     imagesDescriptors, types = readImagesAndComputeDescriptors()
 
     X_train, X_test, y_train, y_test = train_test_split(imagesDescriptors,

@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Menu
+from tkinter import Menu, Frame, Label
 from tkinter.filedialog import askopenfilename
 
 import numpy
@@ -18,6 +18,16 @@ selection_rect_offset = 64
 
 min_width = 300
 min_height = 300
+
+
+class TrainWindow(tk.Toplevel):
+    def __init__(self, root):
+        super().__init__(root)
+        self.geometry("300x200")
+        self.mainframe = Frame(self)
+        self.label = Label(self.mainframe, text="Teste")
+        self.mainframe.pack()
+
 
 
 class SubWindow(tk.Toplevel):
@@ -166,7 +176,8 @@ class MainWindow:
         self.clf = loadSVM()
 
     def train(self):
-        self.clf = trainSVM()
+        train_window = TrainWindow(self.window)
+        self.clf = trainSVM(train_window)
 
     def selection_area(self):
         self.selection_enabled = not self.selection_enabled
