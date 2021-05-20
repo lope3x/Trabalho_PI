@@ -5,7 +5,8 @@ from tkinter.filedialog import askopenfilename
 import numpy
 from PIL import Image, ImageTk, ImageOps
 
-from algorithm import compute_descriptors, compute_all_descriptors, readImages, loadAndComputeDescriptorsAtPath
+from algorithm import compute_descriptors, compute_for_all_images_sizes, trainSVM, loadAndComputeDescriptorsAtPath, \
+    saveSVM, loadSVM
 
 scale_constant = 1.2
 
@@ -14,6 +15,9 @@ min_image_size = 0
 max_image_size = 5000
 
 selection_rect_offset = 64
+
+min_width = 300
+min_height = 300
 
 
 class SubWindow(tk.Toplevel):
@@ -64,7 +68,10 @@ class SubWindow(tk.Toplevel):
         self.canvas.pack()
 
     def classify_image(self):
-        descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
+        if self.clf is None:
+            print("CLF IS NONE")
+            return
+        descriptors = loadAndComputeDescriptorsAtPath(image=self.image_on_screen)
         descriptors = numpy.reshape(descriptors, (1, -1))
         print(self.clf.predict(descriptors))
 
@@ -117,6 +124,7 @@ class MainWindow:
         self.selection_rect = None
         self.exist_sub_window = None
         self.image_canvas = None
+        self.clf = None
 
         self.menu = Menu(self.window)
         self.window.config(menu=self.menu)
@@ -127,6 +135,9 @@ class MainWindow:
         self.menu.add_command(label='Reset Zoom', command=self.reset_zoom)
         self.menu.add_command(label="Selecionar Área", command=self.selection_area)
         self.menu.add_command(label="Treinar", command=self.train)
+        self.menu.add_command(label="Salvar Treino", command=self.save_train)
+        self.menu.add_command(label="Carregar Treino", command=self.load_train)
+        self.menu.add_command(label="Classificar", command=self.classify_image)
         self.image_on_screen = None
 
         self.canvas = tk.Canvas(self.window, width=800, height=800)
@@ -137,8 +148,25 @@ class MainWindow:
         self.canvas.bind("<MouseWheel>", self.on_mousewheel)
         self.window.mainloop()
 
+    def classify_image(self):
+        if self.clf is None:
+            print("CLF IS NONE")
+            return
+        descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
+        descriptors = numpy.reshape(descriptors, (1, -1))
+        print(self.clf.predict(descriptors))
+
+    def save_train(self):
+        if self.clf is not None:
+            saveSVM(self.clf)
+        else:
+            print("CLF IS NONE")
+
+    def load_train(self):
+        self.clf = loadSVM()
+
     def train(self):
-        self.clf = readImages()
+        self.clf = trainSVM()
 
     def selection_area(self):
         self.selection_enabled = not self.selection_enabled
@@ -182,6 +210,7 @@ class MainWindow:
             self.exist_sub_window = SubWindow(image, self.window, self.clf)
         else:
             self.exist_sub_window.set_image(image)
+            self.exist_sub_window.clf = self.clf
 
     def should_create_sub_window(self):
         return self.exist_sub_window is None or not self.exist_sub_window.winfo_exists()
@@ -230,6 +259,10 @@ class MainWindow:
         self.photo_image = ImageTk.PhotoImage(self.image_on_screen)
         self.image_canvas = self.canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
         width, height = self.image_on_screen.size
+        if width < min_width:
+            width = min_width
+        if height < min_height:
+            height = min_height
         self.window.geometry(f"{width}x{height}")
         self.canvas.config(width=width, height=height)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
