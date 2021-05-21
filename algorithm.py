@@ -1,17 +1,16 @@
 import os
-
+from math import pi
+from time import time
 import numpy as np
-from PIL import ImageOps
 from PIL import Image
+from PIL import ImageOps
+from joblib import dump, load
 from skimage.feature import greycomatrix, greycoprops
 from skimage.measure import shannon_entropy
 from sklearn import svm
-from math import pi
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 
-from joblib import dump, load
-from _thread import *
 
 def loadSVM():
     return load('svm.joblib')
@@ -81,21 +80,23 @@ def readImagesAndComputeDescriptors(trainWindow):
                 num_of_images_processed += 1
                 trainWindow.progress['value'] = int((num_of_images_processed/400)*100)
                 trainWindow.update_idletasks()
+                trainWindow.labelVar.set(f"Gerando descritores {num_of_images_processed}/400")
                 print(f"Gerando descritores {num_of_images_processed}/400")
     return imagesDescriptors, types
 
 
 def trainSVM(trainWindow):
+    start = time()
     imagesDescriptors, types = readImagesAndComputeDescriptors(trainWindow)
     trainWindow.progress.destroy()
     X_train, X_test, y_train, y_test = train_test_split(imagesDescriptors,
                                                         types,
                                                         test_size=.25)
 
-    clf = svm.SVC(kernel='linear', probability=True, random_state=42)
+    clf = svm.SVC(kernel='linear', probability=True, gamma="scale", C=1.0)
     print("Iniciando treinamento do SVM")
-    clf.fit(X_train, y_train)
     trainWindow.labelVar.set("Iniciando treinamento do SVM...")
+    clf.fit(X_train, y_train)
     infoString = ""
     y_predicted = clf.predict(X_test)
     print(f"Predicted Values {y_predicted}")
@@ -108,12 +109,15 @@ def trainSVM(trainWindow):
     print(confusionMatrix)
     infoString += str(confusionMatrix)
     (mean_sensibility, specificity) = computeMetrics(confusionMatrix)
-
+    end = time()
     print(f"Accuracy {accuracy}")
     infoString += f"\nAccuracy {accuracy}"
     infoString += f"\nSensiblidade Média: {mean_sensibility}"
     infoString += f"\nEspecificidade: {specificity}"
+    infoString += f"\nTempo de treinamento  = {end-start}"
     trainWindow.labelVar.set(infoString)
+
+    print(f"Tempo de treinamento  = {end-start}")
     return clf
 
 

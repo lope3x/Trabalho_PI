@@ -1,14 +1,17 @@
+import threading
 import tkinter as tk
+from _thread import *
 from tkinter import Menu, Frame, Label, HORIZONTAL, TOP, X, YES
 from tkinter.filedialog import askopenfilename
+from tkinter.messagebox import askquestion, showerror, showinfo
 from tkinter.ttk import Progressbar
 
 import numpy
 from PIL import Image, ImageTk, ImageOps
-import threading
-from algorithm import compute_descriptors, compute_for_all_images_sizes, trainSVM, loadAndComputeDescriptorsAtPath, \
+
+from algorithm import trainSVM, loadAndComputeDescriptorsAtPath, \
     saveSVM, loadSVM
-from _thread import *
+
 scale_constant = 1.2
 
 min_image_size = 0
@@ -29,11 +32,9 @@ class TrainWindow(tk.Toplevel):
         self.labelVar = tk.StringVar()
         self.label = Label(self.mainframe, textvariable=self.labelVar)
         self.label.pack(side=TOP, fill=X, expand=YES)
-        self.progress = Progressbar(self.mainframe, orient = HORIZONTAL, length = 100, mode = 'determinate')
+        self.progress = Progressbar(self.mainframe, orient=HORIZONTAL, length=100, mode='determinate')
         self.progress.pack(side=TOP, fill=X, expand=YES)
         self.mainframe.pack()
-
-
 
 
 class SubWindow(tk.Toplevel):
@@ -86,10 +87,17 @@ class SubWindow(tk.Toplevel):
     def classify_image(self):
         if self.clf is None:
             print("CLF IS NONE")
+            showerror("Error", "Não há nenhum classificador treinado")
             return
-        descriptors = loadAndComputeDescriptorsAtPath(image=self.image_on_screen)
+        if self.image_original is None:
+            print("IMAGE IS NONE")
+            showerror("Error", "Não há nenhuma imagem para ser classificada")
+            return
+        descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
         descriptors = numpy.reshape(descriptors, (1, -1))
-        print(self.clf.predict(descriptors))
+        predicted = self.clf.predict(descriptors)
+        showinfo("Classificação", f"{predicted}")
+        print(predicted)
 
     def change_quantize(self, colors):
         self.num_of_colors = colors
@@ -168,19 +176,30 @@ class MainWindow:
     def classify_image(self):
         if self.clf is None:
             print("CLF IS NONE")
+            showerror("Error", "Não há nenhum classificador treinado")
+            return
+        if self.image_original is None:
+            print("IMAGE IS NONE")
+            showerror("Error", "Não há nenhuma imagem para ser classificada")
             return
         descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
         descriptors = numpy.reshape(descriptors, (1, -1))
-        print(self.clf.predict(descriptors))
+        predicted = self.clf.predict(descriptors)
+        showinfo("Classificação", f"{predicted}")
+        print(predicted)
 
     def save_train(self):
         if self.clf is not None:
-            saveSVM(self.clf)
+            should_save_train = askquestion("Trabalho PI", message="Deseja salvar o treino ?") == "yes"
+            if should_save_train:
+                saveSVM(self.clf)
         else:
-            print("CLF IS NONE")
+            showerror("Error", "Não há nenhum classificador treinado, não foi possível salvar")
 
     def load_train(self):
-        self.clf = loadSVM()
+        should_load_train = askquestion("Trabalho PI", message="Deseja carregar o treino salvo ?") == "yes"
+        if should_load_train:
+            self.clf = loadSVM()
 
     def get_clf(self, train_window):
         self.clf = trainSVM(train_window)
