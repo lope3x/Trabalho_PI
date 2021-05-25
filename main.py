@@ -103,7 +103,7 @@ class SubWindow(tk.Toplevel):
         descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
         descriptors = numpy.reshape(descriptors, (1, -1))
         predicted = self.clf.predict(descriptors)
-        showinfo("Classificação", f"{predicted}")
+        showinfo("Classificação", f"Birads {predicted[0]}")
         print(predicted)
 
     def change_quantize(self, colors):
@@ -192,7 +192,7 @@ class MainWindow:
         descriptors = loadAndComputeDescriptorsAtPath(image=self.image_original)
         descriptors = numpy.reshape(descriptors, (1, -1))
         predicted = self.clf.predict(descriptors)
-        showinfo("Classificação", f"{predicted}")
+        showinfo("Classificação", f"Birads {predicted[0]}")
         print(predicted)
 
     def save_train(self):
