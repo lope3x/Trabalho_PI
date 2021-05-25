@@ -1,3 +1,10 @@
+#
+# Grupo
+# Bruno Duarte de Paula Assis
+# Gabriel Lopes Ferreira
+# Giovanni Carlos Guaceroni
+#
+
 import threading
 import tkinter as tk
 from _thread import *
@@ -20,8 +27,8 @@ max_image_size = 5000
 
 selection_rect_offset = 64
 
-min_width = 300
-min_height = 300
+min_width = 800
+min_height = 800
 
 
 class TrainWindow(tk.Toplevel):

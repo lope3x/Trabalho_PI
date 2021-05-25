@@ -1,3 +1,10 @@
+#
+# Grupo
+# Bruno Duarte de Paula Assis
+# Gabriel Lopes Ferreira
+# Giovanni Carlos Guaceroni
+#
+
 import os
 from math import pi
 from time import time
@@ -110,14 +117,15 @@ def trainSVM(trainWindow):
     infoString += str(confusionMatrix)
     (mean_sensibility, specificity) = computeMetrics(confusionMatrix)
     end = time()
+    trainTime = end - start
     print(f"Accuracy {accuracy}")
     infoString += f"\nAccuracy {accuracy}"
     infoString += f"\nSensiblidade Média: {mean_sensibility}"
     infoString += f"\nEspecificidade: {specificity}"
-    infoString += f"\nTempo de treinamento  = {end-start}"
+    infoString += f"\nTempo de treinamento  = {trainTime}"
     trainWindow.labelVar.set(infoString)
 
-    print(f"Tempo de treinamento  = {end-start}")
+    print(f"Tempo de treinamento  = {round(trainTime, 2)}")
     return clf
 
 

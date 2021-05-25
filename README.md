@@ -1,10 +1,23 @@
 # Trabalho_PI
 
-- <s>Ler e visualizar imagens pelo menos nos formatos PNG e TIFF. As imagens podem ter
-qualquer resolução e número de tons de cinza (normalmente variando entre 8 e 16 bits
-por pixel); </s>
-- <s> Exibir a imagem em uma janela, com opção de zoom; </s>
-- <s> Selecionar com o mouse uma região de interesse de 128 x 128 pixels a serreconhecida. Mostrar o contorno da região na cor azul; </s>
-- <s> Oferecer uma opção para diminuir a resolução da região para 64 x 64 ou 32 x 32 pixels exibindo o resultado; </s>
-- <s> Oferecer uma opção para diminuir a quantização da região para 256, 32 ou 16 tons de cinza, exibindo o resultado; </s>
-- <s>  Oferecer opção para equalizar a região selecionada </s>
+- Para rodar o projeto é necessário ter o Python 3.8 instalado.
+- Execute os comandos abaixo para instalar as dependências:
+  ```
+  pip install tkinter
+  pip install pillow
+  pip install scikit-learn
+  pip install scikit-image
+  pip install numpy
+  pip install joblib
+  ```
+- Coloque o banco de imagens de treino em uma pasta chamada "imgs" de forma que o diretorio fique igual ao abaixo.
+
+    ```
+    ├── imgs            
+        ├── 1 #Dentro de cada uma dessas pastas deverá ter as imagens 
+        ├── 2 utilizadas para o teste no formato png
+        ├── 3
+        ├── 4
+    ```
+
+- Em seguida execute `python main.py` para rodar o projeto.
